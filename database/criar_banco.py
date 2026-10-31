@@ -45,5 +45,18 @@ CREATE TABLE IF NOT EXISTS usuarios (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS presencas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    turno_id INTEGER NOT NULL,
+    data_presenca DATE NOT NULL,
+    registrado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+    FOREIGN KEY (turno_id) REFERENCES turnos (id),
+    UNIQUE (usuario_id, data_presenca)
+)
+""")
+
 conexao.commit()
 conexao.close()
