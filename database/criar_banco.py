@@ -27,5 +27,23 @@ CREATE TABLE IF NOT EXISTS turnos (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    empresa_id INTEGER NOT NULL,
+    turno_id INTEGER,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    senha_hash TEXT NOT NULL,
+    perfil TEXT NOT NULL CHECK (perfil IN ('responsavel', 'colaborador')),
+    matricula TEXT,
+    status TEXT NOT NULL DEFAULT 'ativo' CHECK (status IN ('ativo', 'inativo')),
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (empresa_id) REFERENCES empresas (id),
+    FOREIGN KEY (turno_id) REFERENCES turnos (id)
+)
+""")
+
 conexao.commit()
 conexao.close()
