@@ -1,0 +1,171 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f5;
+    color: #292929;
+}
+
+.pagina-inicial {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.conteudo-inicial {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+}
+
+.conteudo-inicial h1 {
+    margin: 0 0 12px;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.conteudo-inicial p {
+    margin: 0 0 32px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #666666;
+}
+
+.opcoes-acesso {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.opcoes-acesso button,
+.opcoes-acesso a {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #292929;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.opcoes-acesso button:hover,
+.opcoes-acesso a:hover {
+    background-color: #444444;
+}
+
+.pagina-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.conteudo-login {
+    width: 100%;
+    max-width: 420px;
+}
+
+.conteudo-login h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.conteudo-login > p {
+    margin: 0 0 32px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #666666;
+}
+
+.conteudo-login form {
+    display: flex;
+    flex-direction: column;
+}
+
+.conteudo-login label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.conteudo-login input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+.conteudo-login input:focus {
+    outline: none;
+    border-color: #292929;
+}
+
+.conteudo-login button {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #292929;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.conteudo-login button:hover {
+    background-color: #444444;
+}
+
+.link-cadastro {
+    margin: 24px 0 0;
+    text-align: center;
+    font-size: 14px;
+    color: #666666;
+}
+
+.link-cadastro a {
+    color: #292929;
+    font-weight: 600;
+}
+
+.mensagem-erro {
+    width: 100%;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    border: 1px solid #e7b8b8;
+    border-radius: 8px;
+    background-color: #fff5f5;
+    color: #9f3030;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.mensagem-sucesso {
+    width: 100%;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    border: 1px solid #b8d8c0;
+    border-radius: 8px;
+    background-color: #f2faf4;
+    color: #326b40;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+}

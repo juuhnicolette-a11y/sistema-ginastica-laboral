@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ginástica em Dia</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <main class="pagina-inicial">
+        <section class="conteudo-inicial">
+            <h1>Ginástica em Dia</h1>
+
+            <p>
+                Acompanhe sua participação nas aulas de ginástica laboral
+                de forma simples e prática.
+            </p>
+
+            <div class="opcoes-acesso">
+                <a href="{{ url_for('login') }}">Sou colaborador</a>
+                <button>Sou responsável pela empresa</button>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
