@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Início | Ginástica em Dia</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <main>
+        <h1>Olá, {{ nome }}! 👋</h1>
+
+        <p>Bem-vindo ao Ginástica em Dia.</p>
+
+        {% if turno %}
+    <section class="informacoes-turno">
+        <h2>Seu turno</h2>
+        <p>{{ turno }}</p>
+        <p>Horário: {{ horario }}</p>
+    </section>
+{% else %}
+    <section class="informacoes-turno">
+        <h2>Seu turno</h2>
+        <p>Aguardando definição do turno pela empresa.</p>
+    </section>
+{% endif %}
+
+    </main>
+</body>
+
+</html>

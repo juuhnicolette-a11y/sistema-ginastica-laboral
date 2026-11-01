@@ -17,13 +17,20 @@
 
             <p>Acesse sua conta para continuar.</p>
 
-            <form>
+            {% if erro %}
+                <div class="mensagem-erro">
+                    {{ erro }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('login') }}">
                 <label for="email">E-mail</label>
                 <input
                     type="email"
                     id="email"
                     name="email"
                     placeholder="Digite seu e-mail"
+                    value="{{ email or '' }}"
                 >
 
                 <label for="senha">Senha</label>
