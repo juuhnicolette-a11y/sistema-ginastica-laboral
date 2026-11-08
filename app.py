@@ -1,7 +1,10 @@
 import sqlite3
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 app.secret_key = "chave-temporaria-ginastica-em-dia"
@@ -61,7 +64,7 @@ def area_colaborador():
 
     usuario = conexao.execute(
         """
-        SELECT usuarios.nome, turnos.nome, turnos.horario
+        SELECT usuarios.nome, turnos.nome, turnos.horario, turnos.dias_semana
         FROM usuarios
         LEFT JOIN turnos ON usuarios.turno_id = turnos.id
         WHERE usuarios.id = ?
@@ -69,14 +72,153 @@ def area_colaborador():
         (session["usuario_id"],),
     ).fetchone()
 
+    agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    data_hoje = agora.date().isoformat()
+
+    presenca_hoje = conexao.execute(
+        """
+        SELECT id
+        FROM presencas
+        WHERE usuario_id = ? AND data_presenca = ?
+        """,
+        (session["usuario_id"], data_hoje),
+    ).fetchone()
+
     conexao.close()
+
+    print("Já registrou presença hoje?", presenca_hoje is not None)
+
+    dia_atual = agora.weekday()
+
+    dias_semana = [
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+        "domingo",
+    ]
+
+    nome_dia_atual = dias_semana[dia_atual]
+
+    dias_aula = usuario[3].split(",") if usuario[3] else []
+
+    tem_aula_hoje = nome_dia_atual in dias_aula
+
+    ja_registrou_presenca = presenca_hoje is not None
+
+    pode_fazer_checkin = (
+        usuario[1] is not None and tem_aula_hoje and not ja_registrou_presenca
+    )
+
+    print("Pode fazer check-in?", pode_fazer_checkin)
+
+    print("Hoje é dia de aula?", tem_aula_hoje)
 
     return render_template(
         "colaborador.html",
         nome=usuario[0],
         turno=usuario[1],
         horario=usuario[2],
+        tem_aula_hoje=tem_aula_hoje,
+        pode_fazer_checkin=pode_fazer_checkin,
+        ja_registrou_presenca=ja_registrou_presenca,
     )
+
+
+@app.route("/registrar-presenca", methods=["POST"])
+def registrar_presenca():
+    if "usuario_id" not in session or session.get("perfil") != "colaborador":
+        return redirect(url_for("login"))
+
+    conexao = sqlite3.connect("database/ginastica.db")
+
+    usuario = conexao.execute(
+        """
+        SELECT turnos.id, turnos.dias_semana
+        FROM usuarios
+        JOIN turnos ON usuarios.turno_id = turnos.id
+        WHERE usuarios.id = ?
+            AND usuarios.perfil = 'colaborador'
+            AND usuarios.status = 'ativo'
+            AND turnos.status = 'ativo'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    conexao.close()
+
+    if usuario is None or usuario[0] is None:
+        print("Check-in bloqueado: colaborador sem turno ativo ou cadastro válido.")
+        return redirect(url_for("area_colaborador"))
+
+    agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
+
+    dias_semana = [
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+        "domingo",
+    ]
+
+    nome_dia_atual = dias_semana[agora.weekday()]
+
+    dias_aula = [dia.strip() for dia in usuario[1].split(",")]
+
+    if nome_dia_atual not in dias_aula:
+        print("Check-in bloqueado: hoje não é dia de aula.")
+        return redirect(url_for("area_colaborador"))
+
+    print("Check-in permitido para o dia de hoje!")
+
+    data_hoje = agora.date().isoformat()
+
+    conexao = sqlite3.connect("database/ginastica.db")
+
+    presenca_existente = conexao.execute(
+        """
+        SELECT id
+        FROM presencas
+        WHERE usuario_id = ? AND data_presenca = ?
+        """,
+        (session["usuario_id"], data_hoje),
+    ).fetchone()
+
+    conexao.close()
+
+    if presenca_existente is not None:
+        print("Check-in bloqueado: presença já registrada hoje.")
+        return redirect(url_for("area_colaborador"))
+
+    print("Colaborador ainda não registrou presença hoje!")
+
+    conexao = sqlite3.connect("database/ginastica.db")
+
+    try:
+        conexao.execute(
+            """
+            INSERT INTO presencas (usuario_id, turno_id, data_presenca)
+            VALUES (?, ?, ?)
+            """,
+            (session["usuario_id"], usuario[0], data_hoje),
+        )
+
+        conexao.commit()
+        print("Presença registrada com sucesso!")
+
+        flash("Presença registrada com sucesso! 💜")
+
+    except sqlite3.IntegrityError:
+        print("Não foi possível registrar: presença duplicada ou dados inválidos.")
+
+    finally:
+        conexao.close()
+
+    return redirect(url_for("area_colaborador"))
 
 
 @app.route("/logout")

@@ -12,9 +12,10 @@
 
 <body>
     <main>
-        <h1>Olá, {{ nome }}! 👋</h1>
-
-        <p>Bem-vindo ao Ginástica em Dia.</p>
+        <header class="cabecalho-colaborador">
+    <h1>Olá, {{ nome }}! 👋</h1>
+    <p>Bem-vindo ao Ginástica em Dia.</p>
+</header>
 
         {% if turno %}
     <section class="informacoes-turno">
@@ -28,6 +29,44 @@
         <p>Aguardando definição do turno pela empresa.</p>
     </section>
 {% endif %}
+
+
+
+<section class="informacoes-checkin">
+    {% with mensagens = get_flashed_messages() %}
+    {% if mensagens %}
+        {% for mensagem in mensagens %}
+            <p class="mensagem-sucesso">{{ mensagem }}</p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+    <h2>Registro de presença</h2>
+
+    {% if not turno %}
+        <p>Aguarde a definição do seu turno para registrar presença.</p>
+    {% elif tem_aula_hoje %}
+        <p>Hoje é dia de ginástica laboral! 💜</p>
+    {% else %}
+        <p>Hoje não há aula programada para o seu turno.</p>
+    {% endif %}
+    {% if ja_registrou_presenca %}
+
+    <div class="presenca-confirmada">
+        <p>✅ Presença registrada hoje!</p>
+        <p>Seu check-in foi confirmado. 💜</p>
+    </div>
+
+{% else %}
+
+    <form method="POST" action="{{ url_for('registrar_presenca') }}">
+        <button type="submit" {% if not pode_fazer_checkin %}disabled{% endif %}>
+            Registrar presença
+        </button>
+    </form>
+
+{% endif %}
+</section>
 
     </main>
 </body>
