@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios | Ginástica em Dia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="painel-empresa">
+        <a href="{{ url_for('area_empresa') }}" class="link-voltar">
+            ← Voltar ao painel
+        </a>
+
+        <header class="painel-cabecalho">
+            <h1>Relatórios 📊</h1>
+            <p>Acompanhe a participação nas atividades da empresa.</p>
+        </header>
+
+        <form method="GET" class="filtro-relatorios">
+            <label for="mes">Selecione o mês</label>
+            <div class="filtro-relatorios-linha">
+                <input type="month" id="mes" name="mes" value="{{ mes }}" required>
+                <button type="submit">Consultar</button>
+            </div>
+        </form>
+
+        <section class="indicadores-relatorios">
+            <article class="indicador-card">
+                <strong>{{ total_presencas }}</strong>
+                <span>Presenças no mês</span>
+            </article>
+
+            <article class="indicador-card">
+                <strong>{{ participantes }}</strong>
+                <span>Participantes no mês</span>
+            </article>
+
+            <article class="indicador-card">
+                <strong>{{ total_colaboradores }}</strong>
+                <span>Colaboradores ativos</span>
+            </article>
+
+            <article class="indicador-card">
+                <strong>{{ total_turnos }}</strong>
+                <span>Turnos ativos</span>
+            </article>
+        </section>
+
+        <section class="grafico-relatorios">
+            <h2>Presenças por turno</h2>
+            <p>Distribuição dos check-ins no mês selecionado.</p>
+
+            {% for turno in presencas_por_turno %}
+                <div class="grafico-item">
+                    <div class="grafico-legenda">
+                        <span>{{ turno.nome }}</span>
+                        <strong>{{ turno.total_presencas }}</strong>
+                    </div>
+
+                    <div class="grafico-trilha">
+                        <div
+                            class="grafico-barra"
+                            style="width: {{ (turno.total_presencas / maior_total * 100) if maior_total > 0 else 0 }}%"
+                        ></div>
+                    </div>
+                </div>
+            {% else %}
+                <p>Nenhum turno cadastrado.</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

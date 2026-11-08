@@ -864,5 +864,106 @@ def editar_turno(turno_id):
     )
 
 
+@app.route("/empresa/relatorios")
+def relatorios_empresa():
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+
+    empresa_id = obter_empresa_responsavel(conexao)
+
+    if empresa_id is None:
+        conexao.close()
+        return redirect(url_for("login"))
+
+    hoje = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    mes_atual = hoje.strftime("%Y-%m")
+    mes = request.args.get("mes", mes_atual)
+
+    try:
+        data_mes = datetime.strptime(mes, "%Y-%m")
+        if data_mes.strftime("%Y-%m") != mes:
+            raise ValueError
+    except ValueError:
+        mes = mes_atual
+
+    inicio = f"{mes}-01"
+
+    ano, numero_mes = map(int, mes.split("-"))
+    if numero_mes == 12:
+        fim = f"{ano + 1}-01-01"
+    else:
+        fim = f"{ano}-{numero_mes + 1:02d}-01"
+
+    total_colaboradores = conexao.execute(
+        """
+        SELECT COUNT(*)
+        FROM usuarios
+        WHERE empresa_id = ?
+          AND perfil = 'colaborador'
+          AND status = 'ativo'
+        """,
+        (empresa_id,),
+    ).fetchone()[0]
+
+    total_turnos = conexao.execute(
+        """
+        SELECT COUNT(*)
+        FROM turnos
+        WHERE empresa_id = ?
+          AND status = 'ativo'
+        """,
+        (empresa_id,),
+    ).fetchone()[0]
+
+    indicadores = conexao.execute(
+        """
+        SELECT
+            COUNT(*) AS total_presencas,
+            COUNT(DISTINCT presencas.usuario_id) AS participantes
+        FROM presencas
+        JOIN usuarios ON usuarios.id = presencas.usuario_id
+        WHERE usuarios.empresa_id = ?
+          AND presencas.data_presenca >= ?
+          AND presencas.data_presenca < ?
+        """,
+        (empresa_id, inicio, fim),
+    ).fetchone()
+
+    presencas_por_turno = conexao.execute(
+        """
+        SELECT
+            turnos.nome,
+            COUNT(presencas.id) AS total_presencas
+        FROM turnos
+        LEFT JOIN presencas
+          ON presencas.turno_id = turnos.id
+         AND presencas.data_presenca >= ?
+         AND presencas.data_presenca < ?
+        WHERE turnos.empresa_id = ?
+        GROUP BY turnos.id
+        ORDER BY total_presencas DESC, turnos.nome
+        """,
+        (inicio, fim, empresa_id),
+    ).fetchall()
+
+    conexao.close()
+
+    maior_total = max(
+        (turno["total_presencas"] for turno in presencas_por_turno),
+        default=0,
+    )
+
+    return render_template(
+        "relatorios.html",
+        mes=mes,
+        total_colaboradores=total_colaboradores,
+        total_turnos=total_turnos,
+        total_presencas=indicadores["total_presencas"],
+        participantes=indicadores["participantes"],
+        presencas_por_turno=presencas_por_turno,
+        maior_total=maior_total,
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=True)

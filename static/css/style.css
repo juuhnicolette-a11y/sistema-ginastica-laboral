@@ -681,3 +681,132 @@ a.modulo-card:hover {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Relatórios da empresa */
+
+.filtro-relatorios,
+.grafico-relatorios {
+    padding: 24px;
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+.filtro-relatorios label {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.filtro-relatorios-linha {
+    display: flex;
+    gap: 10px;
+}
+
+.filtro-relatorios input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 9px;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.filtro-relatorios button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 9px;
+    background: #333;
+    color: white;
+    cursor: pointer;
+}
+
+.indicadores-relatorios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.indicador-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+}
+
+.indicador-card strong {
+    font-size: 32px;
+    color: #333;
+}
+
+.indicador-card span {
+    font-size: 13px;
+    color: #777;
+}
+
+.grafico-relatorios h2 {
+    font-size: 19px;
+    margin: 0 0 8px;
+}
+
+.grafico-relatorios > p {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 24px;
+}
+
+.grafico-item {
+    margin-bottom: 22px;
+}
+
+.grafico-item:last-child {
+    margin-bottom: 0;
+}
+
+.grafico-legenda {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 9px;
+    font-size: 13px;
+}
+
+.grafico-trilha {
+    width: 100%;
+    height: 10px;
+    background: #eee;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.grafico-barra {
+    height: 100%;
+    background: #82729c;
+    border-radius: 20px;
+}
+
+@media (max-width: 480px) {
+    .filtro-relatorios-linha {
+        flex-direction: column;
+    }
+
+    .filtro-relatorios button {
+        width: 100%;
+    }
+
+    .indicador-card {
+        padding: 18px;
+    }
+
+    .indicador-card strong {
+        font-size: 27px;
+    }
+}
