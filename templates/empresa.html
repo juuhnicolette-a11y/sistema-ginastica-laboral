@@ -1,24 +1,53 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Área da empresa | Ginástica em Dia</title>
+    <title>Painel da empresa | Ginástica em Dia</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <main>
-        <header class="cabecalho-colaborador">
-            <h1>{{ empresa }} 🏢</h1>
-            <p>Painel de gestão | Ginástica em Dia</p>
+    <main class="painel-empresa">
+        <header class="painel-cabecalho">
+            <span class="painel-etiqueta">GINÁSTICA EM DIA</span>
+            <h1>Olá, {{ empresa }} 👋</h1>
+            <p>Acompanhe e gerencie as atividades da sua empresa.</p>
         </header>
 
-        <section class="informacoes-turno">
-            <h2>Bem-vindo à área da empresa!</h2>
-            <p>Gerencie seus colaboradores, turnos, presenças e pesquisas de satisfação em um só lugar.</p>
+        <section class="painel-modulos">
+            <a href="{{ url_for('listar_colaboradores') }}" class="modulo-card">
+                <span class="modulo-icone">👥</span>
+                <h2>Colaboradores</h2>
+                <p>Cadastros e equipes</p>
+                <span class="modulo-seta">↗</span>
+            </a>
+
+            <div class="modulo-card modulo-indisponivel">
+                <span class="modulo-icone">📅</span>
+                <h2>Turnos</h2>
+                <p>Dias e horários</p>
+                <span class="modulo-em-breve">Em breve</span>
+            </div>
+
+            <div class="modulo-card modulo-indisponivel">
+                <span class="modulo-icone">📊</span>
+                <h2>Relatórios</h2>
+                <p>Presenças e resultados</p>
+                <span class="modulo-em-breve">Em breve</span>
+            </div>
+
+            <div class="modulo-card modulo-indisponivel">
+                <span class="modulo-icone">💬</span>
+                <h2>Pesquisas NPS</h2>
+                <p>Satisfação da equipe</p>
+                <span class="modulo-em-breve">Em breve</span>
+            </div>
         </section>
 
-        <p><a href="{{ url_for('logout') }}">Sair da conta</a></p>
+        <a href="{{ url_for('logout') }}" class="painel-sair">
+            Sair da conta
+        </a>
     </main>
 </body>
 </html>

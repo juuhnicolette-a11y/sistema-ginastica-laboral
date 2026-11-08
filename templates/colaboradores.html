@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colaboradores | Ginástica em Dia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="painel-empresa">
+        <a href="{{ url_for('area_empresa') }}" class="link-voltar">
+            ← Voltar ao painel
+        </a>
+
+        <header class="painel-cabecalho">
+            <h1>Colaboradores</h1>
+            <p>Gerencie as pessoas cadastradas na empresa.</p>
+        </header>
+
+        <section class="resumo-colaboradores">
+            <span>Total de colaboradores</span>
+            <strong>{{ colaboradores|length }}</strong>
+            <span class="botao-adicionar-indisponivel">
+                + Adicionar colaborador
+            </span>
+            <small>Cadastro pelo painel disponível em breve</small>
+        </section>
+
+        <section class="lista-colaboradores">
+            {% for colaborador in colaboradores %}
+                <article class="colaborador-card">
+                    <div class="colaborador-topo">
+                        <div>
+                            <h2>{{ colaborador.nome }}</h2>
+                            <p>{{ colaborador.email }}</p>
+                        </div>
+
+                        <span class="status-colaborador {% if colaborador.status == 'ativo' %}status-ativo{% endif %}">
+                            {{ colaborador.status|capitalize }}
+                        </span>
+                    </div>
+
+                    <div class="colaborador-rodape">
+                        <span>◷ {{ colaborador.turno or 'Não definido' }}</span>
+                        <span class="editar-indisponivel">✎ Editar em breve</span>
+                    </div>
+                </article>
+            {% else %}
+                <div class="colaborador-card">
+                    <p>Nenhum colaborador cadastrado.</p>
+                </div>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

@@ -278,3 +278,259 @@ main {
     color: #4b5563;
     font-size: 14px;
 }
+
+.item-colaborador {
+    padding: 16px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.item-colaborador:last-child {
+    border-bottom: none;
+}
+
+.item-colaborador h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+}
+
+.item-colaborador p {
+    margin: 6px 0;
+    font-size: 14px;
+}
+
+
+/* Painel da empresa */
+
+.painel-empresa {
+    max-width: 760px;
+    padding-top: 48px;
+}
+
+.painel-cabecalho {
+    margin-bottom: 28px;
+}
+
+.painel-etiqueta {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #777;
+}
+
+.painel-cabecalho h1 {
+    margin: 12px 0 8px;
+    font-size: 30px;
+}
+
+.painel-cabecalho p {
+    color: #777;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.painel-modulos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.modulo-card {
+    position: relative;
+    display: block;
+    min-width: 0;
+    min-height: 155px;
+    padding: 24px;
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+    text-decoration: none;
+    color: #222;
+    box-sizing: border-box;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+a.modulo-card:hover {
+    border-color: #a7a0b8;
+    transform: translateY(-2px);
+}
+
+.modulo-icone {
+    font-size: 25px;
+}
+
+.modulo-card h2 {
+    font-size: 17px;
+    margin: 16px 0 6px;
+}
+
+.modulo-card p {
+    color: #777;
+    font-size: 13px;
+    margin: 0;
+}
+
+.modulo-seta {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    font-size: 20px;
+}
+
+.modulo-indisponivel {
+    opacity: 0.65;
+}
+
+.modulo-em-breve {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 11px;
+    color: #777;
+}
+
+.painel-sair,
+.link-voltar {
+    display: inline-block;
+    margin-top: 24px;
+    color: #666;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.painel-sair:hover,
+.link-voltar:hover {
+    color: #222;
+    text-decoration: underline;
+}
+
+/* Gestão de colaboradores */
+
+.link-voltar {
+    margin: 0 0 24px;
+}
+
+.resumo-colaboradores {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 24px;
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+.resumo-colaboradores > span:first-child {
+    color: #777;
+    font-size: 13px;
+}
+
+.resumo-colaboradores strong {
+    font-size: 32px;
+}
+
+.botao-adicionar-indisponivel {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    background: #333;
+    color: white;
+    padding: 13px;
+    border-radius: 9px;
+    font-size: 14px;
+    opacity: 0.55;
+}
+
+.resumo-colaboradores small {
+    color: #888;
+    font-size: 11px;
+}
+
+.lista-colaboradores {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.colaborador-card {
+    padding: 22px;
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+}
+
+.colaborador-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.colaborador-topo h2 {
+    font-size: 17px;
+    margin: 0 0 7px;
+}
+
+.colaborador-topo p {
+    font-size: 13px;
+    color: #777;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.status-colaborador {
+    padding: 6px 10px;
+    background: #f0f0f0;
+    color: #666;
+    border-radius: 20px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.status-ativo {
+    background: #edf7ef;
+    color: #287a40;
+}
+
+.colaborador-rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+    font-size: 13px;
+    color: #666;
+}
+
+.editar-indisponivel {
+    color: #999;
+}
+
+/* Ajustes para celular */
+
+@media (max-width: 480px) {
+    .painel-empresa {
+        padding-top: 28px;
+    }
+
+    .painel-modulos {
+        gap: 10px;
+    }
+
+    .modulo-card {
+        padding: 16px;
+        min-height: 155px;
+    }
+
+    .modulo-card h2 {
+        font-size: 15px;
+    }
+
+    .painel-cabecalho h1 {
+        font-size: 26px;
+    }
+}

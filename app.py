@@ -330,5 +330,53 @@ def area_empresa():
     return render_template("empresa.html", empresa=empresa[0])
 
 
+@app.route("/empresa/colaboradores")
+def listar_colaboradores():
+    if "usuario_id" not in session or session.get("perfil") != "responsavel":
+        return redirect(url_for("login"))
+
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+
+    responsavel = conexao.execute(
+        """
+        SELECT usuarios.empresa_id
+        FROM usuarios
+        JOIN empresas ON empresas.id = usuarios.empresa_id
+        WHERE usuarios.id = ?
+          AND usuarios.perfil = 'responsavel'
+          AND usuarios.status = 'ativo'
+          AND empresas.status = 'ativa'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    if responsavel is None:
+        conexao.close()
+        session.clear()
+        return redirect(url_for("login"))
+
+    colaboradores = conexao.execute(
+        """
+        SELECT
+            usuarios.id,
+            usuarios.nome,
+            usuarios.email,
+            usuarios.status,
+            turnos.nome AS turno
+        FROM usuarios
+        LEFT JOIN turnos ON usuarios.turno_id = turnos.id
+        WHERE usuarios.empresa_id = ?
+          AND usuarios.perfil = 'colaborador'
+        ORDER BY usuarios.nome
+        """,
+        (responsavel["empresa_id"],),
+    ).fetchall()
+
+    conexao.close()
+
+    return render_template("colaboradores.html", colaboradores=colaboradores)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
