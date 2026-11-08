@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnos | Ginástica em Dia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="painel-empresa">
+        <a href="{{ url_for('area_empresa') }}" class="link-voltar">
+            ← Voltar ao painel
+        </a>
+
+        <header class="painel-cabecalho">
+            <h1>Turnos 📅</h1>
+            <p>Organize os dias e horários das atividades.</p>
+        </header>
+
+        <section class="resumo-colaboradores">
+            <span>Total de turnos</span>
+            <strong>{{ turnos|length }}</strong>
+            <a href="{{ url_for('adicionar_turno') }}" class="botao-adicionar">
+                + Adicionar turno
+            </a>
+        </section>
+
+        {% with mensagens = get_flashed_messages() %}
+            {% for mensagem in mensagens %}
+                <p class="mensagem-formulario">{{ mensagem }}</p>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="lista-colaboradores">
+            {% for turno in turnos %}
+                <article class="colaborador-card">
+                    <div class="colaborador-topo">
+                        <div>
+                            <h2>{{ turno.nome }}</h2>
+                            <p>{{ turno.horario }}</p>
+                        </div>
+                        <span class="status-colaborador {% if turno.status == 'ativo' %}status-ativo{% endif %}">
+                            {{ turno.status|capitalize }}
+                        </span>
+                    </div>
+
+                    <p class="turno-dias">
+                        {{ turno.dias_semana.replace(',', ', ') }}
+                    </p>
+
+                    <div class="colaborador-rodape">
+                        <span>👥 {{ turno.total_colaboradores }} colaboradores</span>
+                        <a href="{{ url_for('editar_turno', turno_id=turno.id) }}" class="link-editar">
+                            ✎ Editar
+                        </a>
+                    </div>
+                </article>
+            {% else %}
+                <div class="colaborador-card">
+                    <p>Nenhum turno cadastrado.</p>
+                </div>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

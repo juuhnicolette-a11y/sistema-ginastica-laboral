@@ -658,5 +658,211 @@ def adicionar_colaborador():
     )
 
 
+DIAS_SEMANA = [
+    ("segunda", "Segunda-feira"),
+    ("terca", "Terça-feira"),
+    ("quarta", "Quarta-feira"),
+    ("quinta", "Quinta-feira"),
+    ("sexta", "Sexta-feira"),
+    ("sabado", "Sábado"),
+    ("domingo", "Domingo"),
+]
+
+
+def obter_empresa_responsavel(conexao):
+    if "usuario_id" not in session or session.get("perfil") != "responsavel":
+        return None
+
+    resultado = conexao.execute(
+        """
+        SELECT usuarios.empresa_id
+        FROM usuarios
+        JOIN empresas ON empresas.id = usuarios.empresa_id
+        WHERE usuarios.id = ?
+          AND usuarios.perfil = 'responsavel'
+          AND usuarios.status = 'ativo'
+          AND empresas.status = 'ativa'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    return resultado["empresa_id"] if resultado else None
+
+
+@app.route("/empresa/turnos")
+def listar_turnos():
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+
+    empresa_id = obter_empresa_responsavel(conexao)
+
+    if empresa_id is None:
+        conexao.close()
+        return redirect(url_for("login"))
+
+    turnos = conexao.execute(
+        """
+        SELECT turnos.*,
+               COUNT(usuarios.id) AS total_colaboradores
+        FROM turnos
+        LEFT JOIN usuarios
+          ON usuarios.turno_id = turnos.id
+         AND usuarios.empresa_id = turnos.empresa_id
+         AND usuarios.perfil = 'colaborador'
+        WHERE turnos.empresa_id = ?
+        GROUP BY turnos.id
+        ORDER BY turnos.nome
+        """,
+        (empresa_id,),
+    ).fetchall()
+
+    conexao.close()
+
+    return render_template("turnos.html", turnos=turnos)
+
+
+@app.route("/empresa/turnos/adicionar", methods=["GET", "POST"])
+def adicionar_turno():
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+    empresa_id = obter_empresa_responsavel(conexao)
+
+    if empresa_id is None:
+        conexao.close()
+        return redirect(url_for("login"))
+
+    dados = {"nome": "", "horario": "", "dias_semana": "", "status": "ativo"}
+
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        horario = request.form.get("horario", "").strip()
+        dias = request.form.getlist("dias_semana")
+        status = request.form.get("status", "")
+
+        dados = {
+            "nome": nome,
+            "horario": horario,
+            "dias_semana": ",".join(dias),
+            "status": status,
+        }
+
+        dias_validos = {dia[0] for dia in DIAS_SEMANA}
+
+        if not nome or not horario or not dias:
+            flash("Preencha o nome, horário e selecione pelo menos um dia.")
+        elif not set(dias).issubset(dias_validos) or len(dias) != len(set(dias)):
+            flash("Selecione dias da semana válidos.")
+        elif status not in ("ativo", "inativo"):
+            flash("Selecione um status válido.")
+        else:
+            try:
+                datetime.strptime(horario, "%H:%M")
+
+                conexao.execute(
+                    """
+                    INSERT INTO turnos (
+                        empresa_id, nome, horario, dias_semana, status
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (empresa_id, nome, horario, ",".join(dias), status),
+                )
+                conexao.commit()
+                conexao.close()
+
+                flash("Turno cadastrado com sucesso! 💜")
+                return redirect(url_for("listar_turnos"))
+
+            except ValueError:
+                flash("Informe um horário válido.")
+            except sqlite3.IntegrityError:
+                flash("Não foi possível cadastrar o turno.")
+
+    conexao.close()
+
+    return render_template(
+        "formulario_turno.html",
+        dados=dados,
+        dias_semana=DIAS_SEMANA,
+        titulo="Adicionar turno",
+        texto_botao="Cadastrar turno",
+    )
+
+
+@app.route("/empresa/turnos/<int:turno_id>/editar", methods=["GET", "POST"])
+def editar_turno(turno_id):
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+    empresa_id = obter_empresa_responsavel(conexao)
+
+    if empresa_id is None:
+        conexao.close()
+        return redirect(url_for("login"))
+
+    turno = conexao.execute(
+        "SELECT * FROM turnos WHERE id = ? AND empresa_id = ?",
+        (turno_id, empresa_id),
+    ).fetchone()
+
+    if turno is None:
+        conexao.close()
+        flash("Turno não encontrado.")
+        return redirect(url_for("listar_turnos"))
+
+    dados = dict(turno)
+
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        horario = request.form.get("horario", "").strip()
+        dias = request.form.getlist("dias_semana")
+        status = request.form.get("status", "")
+
+        dados = {
+            "nome": nome,
+            "horario": horario,
+            "dias_semana": ",".join(dias),
+            "status": status,
+        }
+
+        dias_validos = {dia[0] for dia in DIAS_SEMANA}
+
+        if not nome or not horario or not dias:
+            flash("Preencha o nome, horário e selecione pelo menos um dia.")
+        elif not set(dias).issubset(dias_validos) or len(dias) != len(set(dias)):
+            flash("Selecione dias da semana válidos.")
+        elif status not in ("ativo", "inativo"):
+            flash("Selecione um status válido.")
+        else:
+            try:
+                datetime.strptime(horario, "%H:%M")
+
+                conexao.execute(
+                    """
+                    UPDATE turnos
+                    SET nome = ?, horario = ?, dias_semana = ?, status = ?
+                    WHERE id = ? AND empresa_id = ?
+                    """,
+                    (nome, horario, ",".join(dias), status, turno_id, empresa_id),
+                )
+                conexao.commit()
+                conexao.close()
+
+                flash("Turno atualizado com sucesso! 💜")
+                return redirect(url_for("listar_turnos"))
+
+            except ValueError:
+                flash("Informe um horário válido.")
+
+    conexao.close()
+
+    return render_template(
+        "formulario_turno.html",
+        dados=dados,
+        dias_semana=DIAS_SEMANA,
+        titulo="Editar turno",
+        texto_botao="Salvar alterações",
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -639,3 +639,45 @@ a.modulo-card:hover {
     font-size: 12px;
     line-height: 1.5;
 }
+
+
+/* Gestão de turnos */
+
+.dias-semana-opcoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 8px 0 14px;
+}
+
+.formulario-empresa .dia-opcao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.formulario-empresa .dia-opcao input {
+    width: auto;
+    margin: 0;
+    accent-color: #555;
+}
+
+.turno-dias {
+    margin: 16px 0 0;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+    .dias-semana-opcoes {
+        grid-template-columns: 1fr;
+    }
+}

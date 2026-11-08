@@ -23,13 +23,12 @@
                 <span class="modulo-seta">↗</span>
             </a>
 
-            <div class="modulo-card modulo-indisponivel">
-                <span class="modulo-icone">📅</span>
-                <h2>Turnos</h2>
-                <p>Dias e horários</p>
-                <span class="modulo-em-breve">Em breve</span>
-            </div>
-
+            <a href="{{ url_for('listar_turnos') }}" class="modulo-card">
+    <span class="modulo-icone">📅</span>
+    <h2>Turnos</h2>
+    <p>Dias e horários</p>
+    <span class="modulo-seta">↗</span>
+</a>
             <div class="modulo-card modulo-indisponivel">
                 <span class="modulo-icone">📊</span>
                 <h2>Relatórios</h2>
