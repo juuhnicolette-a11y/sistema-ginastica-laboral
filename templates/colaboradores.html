@@ -21,10 +21,9 @@
         <section class="resumo-colaboradores">
             <span>Total de colaboradores</span>
             <strong>{{ colaboradores|length }}</strong>
-            <span class="botao-adicionar-indisponivel">
-                + Adicionar colaborador
-            </span>
-            <small>Cadastro pelo painel disponível em breve</small>
+            <a href="{{ url_for('adicionar_colaborador') }}" class="botao-adicionar">
+    + Adicionar colaborador
+</a>
         </section>
 
         <section class="lista-colaboradores">
@@ -43,7 +42,7 @@
 
                     <div class="colaborador-rodape">
                         <span>◷ {{ colaborador.turno or 'Não definido' }}</span>
-                        <span class="editar-indisponivel">✎ Editar em breve</span>
+                        <a href="{{ url_for('editar_colaborador', colaborador_id=colaborador.id) }}" class="link-editar">✎ Editar</a>
                     </div>
                 </article>
             {% else %}

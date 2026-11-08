@@ -378,5 +378,285 @@ def listar_colaboradores():
     return render_template("colaboradores.html", colaboradores=colaboradores)
 
 
+@app.route(
+    "/empresa/colaboradores/<int:colaborador_id>/editar", methods=["GET", "POST"]
+)
+def editar_colaborador(colaborador_id):
+    if "usuario_id" not in session or session.get("perfil") != "responsavel":
+        return redirect(url_for("login"))
+
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+    conexao.execute("PRAGMA foreign_keys = ON")
+
+    responsavel = conexao.execute(
+        """
+        SELECT usuarios.empresa_id
+        FROM usuarios
+        JOIN empresas ON empresas.id = usuarios.empresa_id
+        WHERE usuarios.id = ?
+          AND usuarios.perfil = 'responsavel'
+          AND usuarios.status = 'ativo'
+          AND empresas.status = 'ativa'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    if responsavel is None:
+        conexao.close()
+        session.clear()
+        return redirect(url_for("login"))
+
+    empresa_id = responsavel["empresa_id"]
+
+    colaborador = conexao.execute(
+        """
+        SELECT id, nome, email, turno_id, status
+        FROM usuarios
+        WHERE id = ?
+          AND empresa_id = ?
+          AND perfil = 'colaborador'
+        """,
+        (colaborador_id, empresa_id),
+    ).fetchone()
+
+    if colaborador is None:
+        conexao.close()
+        flash("Colaborador não encontrado.")
+        return redirect(url_for("listar_colaboradores"))
+
+    turnos = conexao.execute(
+        """
+        SELECT id, nome
+        FROM turnos
+        WHERE empresa_id = ?
+          AND (status = 'ativo' OR id = ?)
+        ORDER BY nome
+        """,
+        (empresa_id, colaborador["turno_id"]),
+    ).fetchall()
+
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        turno_informado = request.form.get("turno_id", "")
+        status = request.form.get("status", "")
+
+        erro = None
+        turno_id = None
+
+        if not nome or not email:
+            erro = "Preencha o nome e o e-mail."
+        elif status not in ("ativo", "inativo"):
+            erro = "Selecione um status válido."
+        elif turno_informado:
+            try:
+                turno_id = int(turno_informado)
+            except ValueError:
+                erro = "Selecione um turno válido."
+
+            if erro is None:
+                turno_valido = conexao.execute(
+                    """
+                    SELECT id
+                    FROM turnos
+                    WHERE id = ?
+                      AND empresa_id = ?
+                      AND (status = 'ativo' OR id = ?)
+                    """,
+                    (turno_id, empresa_id, colaborador["turno_id"]),
+                ).fetchone()
+
+                if turno_valido is None:
+                    erro = "O turno selecionado não está disponível."
+
+        if erro is None:
+            email_existente = conexao.execute(
+                "SELECT id FROM usuarios WHERE email = ? AND id != ?",
+                (email, colaborador_id),
+            ).fetchone()
+
+            if email_existente:
+                erro = "Este e-mail já está cadastrado."
+
+        if erro is None:
+            conexao.execute(
+                """
+                UPDATE usuarios
+                SET nome = ?,
+                    email = ?,
+                    turno_id = ?,
+                    status = ?,
+                    atualizado_em = CURRENT_TIMESTAMP
+                WHERE id = ?
+                  AND empresa_id = ?
+                  AND perfil = 'colaborador'
+                """,
+                (nome, email, turno_id, status, colaborador_id, empresa_id),
+            )
+            conexao.commit()
+            conexao.close()
+
+            flash("Colaborador atualizado com sucesso! 💜")
+            return redirect(url_for("listar_colaboradores"))
+
+        flash(erro)
+        dados = {
+            "nome": nome,
+            "email": email,
+            "turno_id": turno_informado,
+            "status": status,
+        }
+    else:
+        dados = dict(colaborador)
+
+    conexao.close()
+
+    return render_template(
+        "editar_colaborador.html",
+        colaborador=dados,
+        turnos=turnos,
+    )
+
+
+@app.route("/empresa/colaboradores/adicionar", methods=["GET", "POST"])
+def adicionar_colaborador():
+    if "usuario_id" not in session or session.get("perfil") != "responsavel":
+        return redirect(url_for("login"))
+
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+    conexao.execute("PRAGMA foreign_keys = ON")
+
+    responsavel = conexao.execute(
+        """
+        SELECT usuarios.empresa_id
+        FROM usuarios
+        JOIN empresas ON empresas.id = usuarios.empresa_id
+        WHERE usuarios.id = ?
+          AND usuarios.perfil = 'responsavel'
+          AND usuarios.status = 'ativo'
+          AND empresas.status = 'ativa'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    if responsavel is None:
+        conexao.close()
+        session.clear()
+        return redirect(url_for("login"))
+
+    empresa_id = responsavel["empresa_id"]
+
+    turnos = conexao.execute(
+        """
+        SELECT id, nome
+        FROM turnos
+        WHERE empresa_id = ?
+          AND status = 'ativo'
+        ORDER BY nome
+        """,
+        (empresa_id,),
+    ).fetchall()
+
+    dados = {
+        "nome": "",
+        "email": "",
+        "turno_id": "",
+    }
+
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
+        turno_informado = request.form.get("turno_id", "")
+
+        dados = {
+            "nome": nome,
+            "email": email,
+            "turno_id": turno_informado,
+        }
+
+        erro = None
+        turno_id = None
+
+        if not nome or not email or not senha:
+            erro = "Preencha nome, e-mail e senha."
+        elif len(senha) < 8:
+            erro = "A senha precisa ter pelo menos 8 caracteres."
+
+        if erro is None and turno_informado:
+            try:
+                turno_id = int(turno_informado)
+            except ValueError:
+                erro = "Selecione um turno válido."
+
+            if erro is None:
+                turno_valido = conexao.execute(
+                    """
+                    SELECT id
+                    FROM turnos
+                    WHERE id = ?
+                      AND empresa_id = ?
+                      AND status = 'ativo'
+                    """,
+                    (turno_id, empresa_id),
+                ).fetchone()
+
+                if turno_valido is None:
+                    erro = "O turno selecionado não está disponível."
+
+        if erro is None:
+            email_existente = conexao.execute(
+                "SELECT id FROM usuarios WHERE email = ?",
+                (email,),
+            ).fetchone()
+
+            if email_existente:
+                erro = "Este e-mail já está cadastrado."
+
+        if erro is None:
+            try:
+                conexao.execute(
+                    """
+                    INSERT INTO usuarios (
+                        empresa_id,
+                        turno_id,
+                        nome,
+                        email,
+                        senha_hash,
+                        perfil,
+                        status
+                    )
+                    VALUES (?, ?, ?, ?, ?, 'colaborador', 'ativo')
+                    """,
+                    (
+                        empresa_id,
+                        turno_id,
+                        nome,
+                        email,
+                        generate_password_hash(senha),
+                    ),
+                )
+                conexao.commit()
+            except sqlite3.IntegrityError:
+                erro = "Não foi possível cadastrar. Verifique os dados."
+
+        if erro is None:
+            conexao.close()
+            flash("Colaborador cadastrado com sucesso! 💜")
+            return redirect(url_for("listar_colaboradores"))
+
+        flash(erro)
+
+    conexao.close()
+
+    return render_template(
+        "adicionar_colaborador.html",
+        dados=dados,
+        turnos=turnos,
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar colaborador | Ginástica em Dia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="painel-empresa">
+        <a href="{{ url_for('listar_colaboradores') }}" class="link-voltar">
+            ← Voltar aos colaboradores
+        </a>
+
+        <header class="painel-cabecalho">
+            <h1>Adicionar colaborador</h1>
+            <p>Cadastre uma pessoa para acessar o Ginástica em Dia.</p>
+        </header>
+
+        <section class="formulario-empresa">
+            {% with mensagens = get_flashed_messages() %}
+                {% for mensagem in mensagens %}
+                    <p class="mensagem-formulario">{{ mensagem }}</p>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST">
+                <label for="nome">Nome completo</label>
+                <input
+                    type="text"
+                    id="nome"
+                    name="nome"
+                    value="{{ dados.nome }}"
+                    required
+                >
+
+                <label for="email">E-mail</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value="{{ dados.email }}"
+                    required
+                >
+
+                <label for="senha">Senha inicial</label>
+                <input
+                    type="password"
+                    id="senha"
+                    name="senha"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
+                <small>Defina uma senha inicial com pelo menos 8 caracteres.</small>
+
+                <label for="turno_id">Turno</label>
+                <select id="turno_id" name="turno_id">
+                    <option value="">Sem turno definido</option>
+                    {% for turno in turnos %}
+                        <option
+                            value="{{ turno.id }}"
+                            {% if dados.turno_id|string == turno.id|string %}selected{% endif %}
+                        >
+                            {{ turno.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="botao-salvar">
+                    Cadastrar colaborador
+                </button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
