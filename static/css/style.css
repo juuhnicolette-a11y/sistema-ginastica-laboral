@@ -810,3 +810,111 @@ a.modulo-card:hover {
         font-size: 27px;
     }
 }
+
+/* Pesquisas NPS */
+
+.secao-pesquisas {
+    margin-top: 24px;
+}
+
+.secao-pesquisas > h2,
+.formulario-empresa > h2 {
+    font-size: 19px;
+    margin: 0 0 16px;
+}
+
+.descricao-pesquisa {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 18px 0;
+}
+
+.resultado-nps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid #eee;
+}
+
+.resultado-nps > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.resultado-nps strong {
+    font-size: 27px;
+}
+
+.resultado-nps span {
+    font-size: 12px;
+    color: #777;
+}
+
+.notas-nps {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.formulario-empresa .nota-opcao {
+    margin: 0;
+    cursor: pointer;
+}
+
+.formulario-empresa .nota-opcao input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.nota-opcao span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    border: 1px solid #ddd;
+    border-radius: 9px;
+    font-size: 14px;
+}
+
+.nota-opcao input:checked + span {
+    background: #82729c;
+    border-color: #82729c;
+    color: white;
+}
+
+.nota-opcao input:focus-visible + span {
+    outline: 2px solid #333;
+    outline-offset: 2px;
+}
+
+.escala-nps {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 14px;
+}
+
+.formulario-empresa textarea {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #ddd;
+    border-radius: 9px;
+    font: inherit;
+    box-sizing: border-box;
+    resize: vertical;
+}
+body > .link-voltar {
+    display: block;
+    width: calc(100% - 40px);
+    max-width: 400px;
+    margin: 30px auto 0;
+    box-sizing: border-box;
+}

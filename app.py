@@ -18,62 +18,88 @@ def inicio():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
-        senha = request.form["senha"]
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
 
         conexao = sqlite3.connect("database/ginastica.db")
-        conexao.execute("PRAGMA foreign_keys = ON")
 
         usuario = conexao.execute(
             """
-            SELECT id, nome, email, senha_hash, perfil, status
+            SELECT
+                usuarios.id,
+                usuarios.senha_hash,
+                usuarios.perfil
             FROM usuarios
-            WHERE email = ?
+            JOIN empresas
+              ON empresas.id = usuarios.empresa_id
+            WHERE LOWER(usuarios.email) = ?
+              AND usuarios.status = 'ativo'
+              AND empresas.status = 'ativa'
             """,
             (email,),
         ).fetchone()
 
         conexao.close()
 
-        if usuario is None or not check_password_hash(usuario[3], senha):
+        if usuario is None or not check_password_hash(usuario[1], senha):
             return render_template(
                 "login.html",
-                erro="E-mail ou senha incorretos.",
+                erro="E-mail ou senha incorretos, ou conta inativa.",
                 email=email,
             )
-        perfil = usuario[4]
 
+        if usuario[2] not in ("colaborador", "responsavel"):
+            return render_template(
+                "login.html",
+                erro="Perfil de acesso inválido.",
+                email=email,
+            )
+
+        session.clear()
         session["usuario_id"] = usuario[0]
-        session["perfil"] = usuario[4]
+        session["perfil"] = usuario[2]
 
-        if perfil == "colaborador":
+        if usuario[2] == "colaborador":
             return redirect(url_for("area_colaborador"))
 
-        if perfil == "responsavel":
-            return redirect(url_for("area_empresa"))
+        return redirect(url_for("area_empresa"))
 
     return render_template("login.html")
 
 
 @app.route("/colaborador")
 def area_colaborador():
-    if "usuario_id" not in session:
-        return redirect(url_for("login"))
-
-    if session["perfil"] != "colaborador":
+    if "usuario_id" not in session or session.get("perfil") != "colaborador":
         return redirect(url_for("login"))
 
     conexao = sqlite3.connect("database/ginastica.db")
 
     usuario = conexao.execute(
         """
-        SELECT usuarios.nome, turnos.nome, turnos.horario, turnos.dias_semana
+        SELECT
+            usuarios.nome,
+            turnos.nome,
+            turnos.horario,
+            turnos.dias_semana,
+            turnos.status
         FROM usuarios
-        LEFT JOIN turnos ON usuarios.turno_id = turnos.id
+        JOIN empresas
+          ON empresas.id = usuarios.empresa_id
+        LEFT JOIN turnos
+          ON usuarios.turno_id = turnos.id
+         AND turnos.empresa_id = usuarios.empresa_id
         WHERE usuarios.id = ?
+          AND usuarios.perfil = 'colaborador'
+          AND usuarios.status = 'ativo'
+          AND empresas.status = 'ativa'
         """,
         (session["usuario_id"],),
     ).fetchone()
+
+    if usuario is None:
+        conexao.close()
+        session.clear()
+        return redirect(url_for("login"))
 
     agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
     data_hoje = agora.date().isoformat()
@@ -89,10 +115,6 @@ def area_colaborador():
 
     conexao.close()
 
-    print("Já registrou presença hoje?", presenca_hoje is not None)
-
-    dia_atual = agora.weekday()
-
     dias_semana = [
         "segunda",
         "terca",
@@ -103,21 +125,16 @@ def area_colaborador():
         "domingo",
     ]
 
-    nome_dia_atual = dias_semana[dia_atual]
+    nome_dia_atual = dias_semana[agora.weekday()]
+    dias_aula = [dia.strip() for dia in usuario[3].split(",")] if usuario[3] else []
 
-    dias_aula = usuario[3].split(",") if usuario[3] else []
-
-    tem_aula_hoje = nome_dia_atual in dias_aula
+    tem_aula_hoje = usuario[4] == "ativo" and nome_dia_atual in dias_aula
 
     ja_registrou_presenca = presenca_hoje is not None
 
     pode_fazer_checkin = (
         usuario[1] is not None and tem_aula_hoje and not ja_registrou_presenca
     )
-
-    print("Pode fazer check-in?", pode_fazer_checkin)
-
-    print("Hoje é dia de aula?", tem_aula_hoje)
 
     return render_template(
         "colaborador.html",
@@ -141,8 +158,11 @@ def registrar_presenca():
         """
         SELECT turnos.id, turnos.dias_semana
         FROM usuarios
+        JOIN empresas ON empresas.id = usuarios.empresa_id
         JOIN turnos ON usuarios.turno_id = turnos.id
         WHERE usuarios.id = ?
+            AND turnos.empresa_id = usuarios.empresa_id
+            AND empresas.status = 'ativa'
             AND usuarios.perfil = 'colaborador'
             AND usuarios.status = 'ativo'
             AND turnos.status = 'ativo'
@@ -227,7 +247,7 @@ def registrar_presenca():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("inicio"))
 
 
 @app.route("/cadastro", methods=["GET", "POST"])
@@ -441,6 +461,7 @@ def editar_colaborador(colaborador_id):
         email = request.form.get("email", "").strip().lower()
         turno_informado = request.form.get("turno_id", "")
         status = request.form.get("status", "")
+        nova_senha = request.form.get("nova_senha", "")
 
         erro = None
         turno_id = None
@@ -449,6 +470,8 @@ def editar_colaborador(colaborador_id):
             erro = "Preencha o nome e o e-mail."
         elif status not in ("ativo", "inativo"):
             erro = "Selecione um status válido."
+        elif nova_senha and len(nova_senha) < 8:
+            erro = "A nova senha precisa ter pelo menos 8 caracteres."
         elif turno_informado:
             try:
                 turno_id = int(turno_informado)
@@ -480,20 +503,46 @@ def editar_colaborador(colaborador_id):
                 erro = "Este e-mail já está cadastrado."
 
         if erro is None:
-            conexao.execute(
-                """
-                UPDATE usuarios
-                SET nome = ?,
-                    email = ?,
-                    turno_id = ?,
-                    status = ?,
-                    atualizado_em = CURRENT_TIMESTAMP
-                WHERE id = ?
-                  AND empresa_id = ?
-                  AND perfil = 'colaborador'
-                """,
-                (nome, email, turno_id, status, colaborador_id, empresa_id),
-            )
+            if nova_senha:
+                conexao.execute(
+                    """
+                    UPDATE usuarios
+                    SET nome = ?,
+                        email = ?,
+                        turno_id = ?,
+                        status = ?,
+                        senha_hash = ?,
+                        atualizado_em = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                      AND empresa_id = ?
+                      AND perfil = 'colaborador'
+                    """,
+                    (
+                        nome,
+                        email,
+                        turno_id,
+                        status,
+                        generate_password_hash(nova_senha),
+                        colaborador_id,
+                        empresa_id,
+                    ),
+                )
+            else:
+                conexao.execute(
+                    """
+                    UPDATE usuarios
+                    SET nome = ?,
+                        email = ?,
+                        turno_id = ?,
+                        status = ?,
+                        atualizado_em = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                      AND empresa_id = ?
+                      AND perfil = 'colaborador'
+                    """,
+                    (nome, email, turno_id, status, colaborador_id, empresa_id),
+                )
+
             conexao.commit()
             conexao.close()
 
@@ -963,6 +1012,276 @@ def relatorios_empresa():
         presencas_por_turno=presencas_por_turno,
         maior_total=maior_total,
     )
+
+
+@app.route("/empresa/nps", methods=["GET", "POST"])
+def pesquisas_empresa():
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+    conexao.execute("PRAGMA foreign_keys = ON")
+
+    empresa_id = obter_empresa_responsavel(conexao)
+    if empresa_id is None:
+        conexao.close()
+        return redirect(url_for("login"))
+
+    hoje = datetime.now(ZoneInfo("America/Sao_Paulo")).date().isoformat()
+
+    if request.method == "POST":
+        titulo = request.form.get("titulo", "").strip()
+        pergunta = request.form.get("pergunta", "").strip()
+        inicio = request.form.get("data_inicio", "")
+        fim = request.form.get("data_fim", "")
+
+        erro = None
+        if not titulo or not pergunta:
+            erro = "Preencha o título e a pergunta."
+        else:
+            try:
+                data_inicio = datetime.strptime(inicio, "%Y-%m-%d").date()
+                data_fim = datetime.strptime(fim, "%Y-%m-%d").date()
+                if data_fim < data_inicio:
+                    erro = "A data final não pode ser anterior à inicial."
+            except ValueError:
+                erro = "Informe datas válidas."
+
+        if erro:
+            flash(erro)
+        else:
+            conexao.execute(
+                """
+                INSERT INTO pesquisas_nps
+                    (empresa_id, titulo, pergunta, data_inicio, data_fim)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (empresa_id, titulo, pergunta, inicio, fim),
+            )
+            conexao.commit()
+            conexao.close()
+            flash("Pesquisa criada com sucesso! 💜")
+            return redirect(url_for("pesquisas_empresa"))
+
+    pesquisas = conexao.execute(
+        """
+        SELECT p.id, p.titulo, p.pergunta,
+               p.data_inicio, p.data_fim,
+               COUNT(r.id) AS total_respostas,
+               SUM(CASE WHEN r.nota >= 9 THEN 1 ELSE 0 END)
+                   AS promotores,
+               SUM(CASE WHEN r.nota <= 6 THEN 1 ELSE 0 END)
+                   AS detratores
+        FROM pesquisas_nps p
+        LEFT JOIN respostas_nps r ON r.pesquisa_id = p.id
+        WHERE p.empresa_id = ?
+        GROUP BY p.id
+        ORDER BY p.id DESC
+        """,
+        (empresa_id,),
+    ).fetchall()
+    conexao.close()
+
+    resultados = []
+    for pesquisa in pesquisas:
+        total = pesquisa["total_respostas"]
+        nps = None
+        if total:
+            nps = round(
+                100
+                * ((pesquisa["promotores"] or 0) - (pesquisa["detratores"] or 0))
+                / total
+            )
+
+        resultados.append(
+            {
+                "titulo": pesquisa["titulo"],
+                "pergunta": pesquisa["pergunta"],
+                "inicio": pesquisa["data_inicio"],
+                "fim": pesquisa["data_fim"],
+                "total": total,
+                "nps": nps,
+                "status": (
+                    "Agendada"
+                    if hoje < pesquisa["data_inicio"]
+                    else "Encerrada" if hoje > pesquisa["data_fim"] else "Em andamento"
+                ),
+            }
+        )
+
+    return render_template(
+        "pesquisas_empresa.html",
+        pesquisas=resultados,
+        hoje=hoje,
+    )
+
+
+@app.route("/colaborador/pesquisas")
+def pesquisas_colaborador():
+    if "usuario_id" not in session or session.get("perfil") != "colaborador":
+        return redirect(url_for("login"))
+
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+
+    usuario = conexao.execute(
+        """
+        SELECT u.empresa_id, u.turno_id
+        FROM usuarios u
+        JOIN empresas e ON e.id = u.empresa_id
+        WHERE u.id = ?
+          AND u.perfil = 'colaborador'
+          AND u.status = 'ativo'
+          AND e.status = 'ativa'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    if usuario is None:
+        conexao.close()
+        session.clear()
+        return redirect(url_for("login"))
+
+    hoje = datetime.now(ZoneInfo("America/Sao_Paulo")).date().isoformat()
+
+    pesquisas = conexao.execute(
+        """
+        SELECT p.id, p.titulo, p.pergunta, p.data_fim,
+               CASE WHEN r.id IS NULL THEN 0 ELSE 1 END
+                   AS respondida
+        FROM pesquisas_nps p
+        LEFT JOIN respostas_nps r
+          ON r.pesquisa_id = p.id
+         AND r.usuario_id = ?
+        WHERE p.empresa_id = ?
+          AND p.data_inicio <= ?
+          AND p.data_fim >= ?
+        ORDER BY p.data_fim, p.id
+        """,
+        (session["usuario_id"], usuario["empresa_id"], hoje, hoje),
+    ).fetchall()
+    conexao.close()
+
+    return render_template(
+        "pesquisas_colaborador.html",
+        pesquisas=pesquisas,
+    )
+
+
+@app.route(
+    "/colaborador/pesquisas/<int:pesquisa_id>/responder", methods=["GET", "POST"]
+)
+def responder_nps(pesquisa_id):
+    if "usuario_id" not in session or session.get("perfil") != "colaborador":
+        return redirect(url_for("login"))
+
+    conexao = sqlite3.connect("database/ginastica.db")
+    conexao.row_factory = sqlite3.Row
+    conexao.execute("PRAGMA foreign_keys = ON")
+
+    usuario = conexao.execute(
+        """
+        SELECT u.empresa_id, u.turno_id
+        FROM usuarios u
+        JOIN empresas e ON e.id = u.empresa_id
+        WHERE u.id = ?
+          AND u.perfil = 'colaborador'
+          AND u.status = 'ativo'
+          AND e.status = 'ativa'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    if usuario is None:
+        conexao.close()
+        session.clear()
+        return redirect(url_for("login"))
+
+    hoje = datetime.now(ZoneInfo("America/Sao_Paulo")).date().isoformat()
+
+    pesquisa = conexao.execute(
+        """
+        SELECT id, titulo, pergunta
+        FROM pesquisas_nps
+        WHERE id = ?
+          AND empresa_id = ?
+          AND data_inicio <= ?
+          AND data_fim >= ?
+        """,
+        (pesquisa_id, usuario["empresa_id"], hoje, hoje),
+    ).fetchone()
+
+    if pesquisa is None:
+        conexao.close()
+        flash("Pesquisa indisponível.")
+        return redirect(url_for("pesquisas_colaborador"))
+
+    respondida = conexao.execute(
+        """
+        SELECT id FROM respostas_nps
+        WHERE pesquisa_id = ? AND usuario_id = ?
+        """,
+        (pesquisa_id, session["usuario_id"]),
+    ).fetchone()
+
+    if respondida:
+        conexao.close()
+        flash("Você já respondeu a esta pesquisa. 💜")
+        return redirect(url_for("pesquisas_colaborador"))
+
+    if request.method == "POST":
+        nota_texto = request.form.get("nota", "")
+        comentario = request.form.get("comentario", "").strip()
+        erro = None
+
+        try:
+            nota = int(nota_texto)
+            if str(nota) != nota_texto or not 0 <= nota <= 10:
+                erro = "Selecione uma nota de 0 a 10."
+        except ValueError:
+            erro = "Selecione uma nota de 0 a 10."
+
+        if usuario["turno_id"] is None:
+            erro = "Solicite ao responsável seu vínculo com um turno."
+
+        if erro is None:
+            turno = conexao.execute(
+                """
+                SELECT id FROM turnos
+                WHERE id = ? AND empresa_id = ?
+                """,
+                (usuario["turno_id"], usuario["empresa_id"]),
+            ).fetchone()
+            if turno is None:
+                erro = "Seu turno não está disponível."
+
+        if erro is None:
+            try:
+                conexao.execute(
+                    """
+                    INSERT INTO respostas_nps
+                        (pesquisa_id, usuario_id, turno_id, nota, comentario)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        pesquisa_id,
+                        session["usuario_id"],
+                        usuario["turno_id"],
+                        nota,
+                        comentario or None,
+                    ),
+                )
+                conexao.commit()
+            except sqlite3.IntegrityError:
+                erro = "Não foi possível registrar a resposta."
+
+        if erro is None:
+            conexao.close()
+            flash("Resposta enviada com sucesso! Obrigada por participar. 💜")
+            return redirect(url_for("pesquisas_colaborador"))
+
+        flash(erro)
+
+    conexao.close()
+    return render_template("responder_nps.html", pesquisa=pesquisa)
 
 
 if __name__ == "__main__":
