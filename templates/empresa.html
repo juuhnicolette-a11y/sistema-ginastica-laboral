@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área da empresa | Ginástica em Dia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main>
+        <header class="cabecalho-colaborador">
+            <h1>{{ empresa }} 🏢</h1>
+            <p>Painel de gestão | Ginástica em Dia</p>
+        </header>
+
+        <section class="informacoes-turno">
+            <h2>Bem-vindo à área da empresa!</h2>
+            <p>Gerencie seus colaboradores, turnos, presenças e pesquisas de satisfação em um só lugar.</p>
+        </section>
+
+        <p><a href="{{ url_for('logout') }}">Sair da conta</a></p>
+    </main>
+</body>
+</html>

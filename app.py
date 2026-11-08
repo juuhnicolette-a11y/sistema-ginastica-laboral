@@ -49,6 +49,9 @@ def login():
         if perfil == "colaborador":
             return redirect(url_for("area_colaborador"))
 
+        if perfil == "responsavel":
+            return redirect(url_for("area_empresa"))
+
     return render_template("login.html")
 
 
@@ -296,6 +299,35 @@ def cadastro():
             "cadastro.html",
             sucesso="Cadastro realizado com sucesso! Agora você já pode acessar sua conta.",
         )
+
+
+@app.route("/empresa")
+def area_empresa():
+    if "usuario_id" not in session or session.get("perfil") != "responsavel":
+        return redirect(url_for("login"))
+
+    conexao = sqlite3.connect("database/ginastica.db")
+
+    empresa = conexao.execute(
+        """
+        SELECT empresas.nome
+        FROM usuarios
+        JOIN empresas ON usuarios.empresa_id = empresas.id
+        WHERE usuarios.id = ?
+          AND usuarios.perfil = 'responsavel'
+          AND usuarios.status = 'ativo'
+          AND empresas.status = 'ativa'
+        """,
+        (session["usuario_id"],),
+    ).fetchone()
+
+    conexao.close()
+
+    if empresa is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    return render_template("empresa.html", empresa=empresa[0])
 
 
 if __name__ == "__main__":
