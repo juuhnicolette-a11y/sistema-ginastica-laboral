@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responder pesquisa | Ginástica em Dia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="painel-empresa">
+        <a href="{{ url_for('pesquisas_colaborador') }}" class="link-voltar">
+            ← Voltar às pesquisas
+        </a>
+
+        <header class="painel-cabecalho">
+            <h1>{{ pesquisa.titulo }}</h1>
+            <p>Sua resposta será apresentada à empresa sem identificação.</p>
+        </header>
+
+        <section class="formulario-empresa">
+            {% with mensagens = get_flashed_messages() %}
+                {% for mensagem in mensagens %}
+                    <p class="mensagem-formulario">{{ mensagem }}</p>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST">
+                <label>{{ pesquisa.pergunta }}</label>
+
+                <div class="notas-nps">
+                    {% for nota in range(11) %}
+                        <label class="nota-opcao">
+                            <input type="radio" name="nota"
+                                   value="{{ nota }}" required>
+                            <span>{{ nota }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                <div class="escala-nps">
+                    <span>Não recomendaria</span>
+                    <span>Recomendaria muito</span>
+                </div>
+
+                <label for="comentario">
+                    Quer contar o motivo da sua nota? (opcional)
+                </label>
+                <textarea id="comentario" name="comentario"
+                          rows="4" maxlength="1000"></textarea>
+
+                <button class="botao-salvar" type="submit">
+                    Enviar resposta
+                </button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

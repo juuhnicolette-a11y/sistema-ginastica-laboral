@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas pesquisas | Ginástica em Dia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <main class="painel-empresa">
+        <a href="{{ url_for('area_colaborador') }}" class="link-voltar">
+            ← Voltar ao início
+        </a>
+
+        <header class="painel-cabecalho">
+            <h1>Pesquisas 💬</h1>
+            <p>Sua opinião nos ajuda a melhorar as atividades.</p>
+        </header>
+
+        {% with mensagens = get_flashed_messages() %}
+            {% for mensagem in mensagens %}
+                <p class="mensagem-formulario">{{ mensagem }}</p>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="lista-colaboradores">
+            {% for pesquisa in pesquisas %}
+                <article class="colaborador-card">
+                    <h2>{{ pesquisa.titulo }}</h2>
+                    <p class="descricao-pesquisa">
+                        {{ pesquisa.pergunta }}
+                    </p>
+
+                    {% if pesquisa.respondida %}
+                        <span class="status-colaborador status-ativo">
+                            ✓ Respondida
+                        </span>
+                    {% else %}
+                        <a class="botao-adicionar"
+                           href="{{ url_for('responder_nps', pesquisa_id=pesquisa.id) }}">
+                            Responder pesquisa
+                        </a>
+                    {% endif %}
+                </article>
+            {% else %}
+                <div class="colaborador-card">
+                    <p>Nenhuma pesquisa disponível no momento.</p>
+                </div>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>
