@@ -855,8 +855,8 @@ a.modulo-card:hover {
 
 .notas-nps {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+    gap: 5px;
     margin-top: 12px;
 }
 
@@ -917,4 +917,38 @@ body > .link-voltar {
     max-width: 400px;
     margin: 30px auto 0;
     box-sizing: border-box;
+}
+
+.btn-voltar {
+    display: inline-block;
+    padding: 10px 16px;
+    color: #555;
+    text-decoration: none;
+    font-size: 14px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.btn-voltar:hover {
+    background-color: #f1f1f1;
+    color: #222;
+}
+
+/* Escala NPS responsiva */
+
+@media (max-width: 480px) {
+    .notas-nps {
+        gap: 3px;
+    }
+
+    .nota-opcao span {
+        height: 36px;
+        font-size: 12px;
+        border-radius: 6px;
+    }
+
+    .escala-nps {
+        font-size: 10px;
+        gap: 8px;
+    }
 }

@@ -233,8 +233,6 @@ def registrar_presenca():
         conexao.commit()
         print("Presença registrada com sucesso!")
 
-        flash("Presença registrada com sucesso! 💜")
-
     except sqlite3.IntegrityError:
         print("Não foi possível registrar: presença duplicada ou dados inválidos.")
 
@@ -319,6 +317,8 @@ def cadastro():
             "cadastro.html",
             sucesso="Cadastro realizado com sucesso! Agora você já pode acessar sua conta.",
         )
+        
+    return render_template("cadastro.html")
 
 
 @app.route("/empresa")
