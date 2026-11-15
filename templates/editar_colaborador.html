@@ -25,7 +25,7 @@
                 {% endfor %}
             {% endwith %}
 
-            <form method="POST">
+            <form method="POST" data-proteger-alteracoes>
                 <label for="nome">Nome completo</label>
                 <input
                     type="text"
@@ -86,5 +86,7 @@
             </form>
         </section>
     </main>
+
+    <script src="{{ url_for('static', filename='protecao_formularios.js') }}" defer></script>
 </body>
 </html>

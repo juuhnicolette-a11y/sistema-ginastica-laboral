@@ -27,7 +27,7 @@
                 {% endfor %}
             {% endwith %}
 
-            <form method="POST">
+            <form method="POST" data-proteger-alteracoes>
                 <label for="titulo">Título</label>
                 <input id="titulo" name="titulo" type="text"
                        placeholder="Ex.: NPS Novembro" required>
@@ -92,5 +92,7 @@
             {% endfor %}
         </section>
     </main>
+
+    <script src="{{ url_for('static', filename='protecao_formularios.js') }}" defer></script>
 </body>
 </html>
