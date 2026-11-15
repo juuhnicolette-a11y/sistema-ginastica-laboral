@@ -28,7 +28,7 @@
                 </div>
             {% endif %}
             
-            <form method="POST" action="{{ url_for('cadastro') }}">
+            <form method="POST" action="{{ url_for('cadastro') }}" data-validar-cadastro>
                 <label for="codigo_empresa">Código da empresa</label>
                 <input
                     type="text"
@@ -77,6 +77,7 @@
 </div>
         </section>
     </main>
+    <script src="{{ url_for('static', filename='validacao_formularios.js') }}" defer></script>
 </body>
 
 </html>
