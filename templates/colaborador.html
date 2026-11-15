@@ -59,11 +59,11 @@
 
 {% else %}
 
-    <form method="POST" action="{{ url_for('registrar_presenca') }}">
-        <button type="submit" {% if not pode_fazer_checkin %}disabled{% endif %}>
-            Registrar presença
-        </button>
-    </form>
+<form method="POST" action="{{ url_for('registrar_presenca') }}" data-checkin>
+    <button type="submit" {% if not pode_fazer_checkin %}disabled{% endif %}>
+        Registrar presença
+    </button>
+</form>
 
 {% endif %}
 </section>
@@ -80,6 +80,8 @@
     Sair da conta
 </a>
     </main>
+
+    <script src="{{ url_for('static', filename='checkin.js') }}" defer></script>
 </body>
 
 </html>
